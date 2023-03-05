@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Testing;
 using Microsoft.CodeAnalysis.CSharp;
@@ -116,7 +116,7 @@ using System;
             await VerifyCS.VerifyAnalyzerAsync(test, expectedDetectorDiagnostic);
         }
 
-
+        // Divide assagnment is the same as simple assignment, so there is only one test for it
         [TestMethod]
         public async Task DA_DivideVariableByZeroConstant_DiagnosticIsTriggered()
         {
@@ -165,28 +165,6 @@ using System;
 
 
         [TestMethod]
-        public async Task DA_DivideVariableBySimpleNumericExpression_DiagnosticIsTriggered()
-        {
-            var test = @"
-using System;
-
-    class Program
-    {
-        static void Main(string[] args)
-        {
-            int y = 4;
-            {|#0:y /= (2 - 2)|};
-        }
-    };
-";
-
-            var expectedDetectorDiagnostic = new DiagnosticResult(DivisionByZeroDetectorAnalyzer.DiagnosticId,
-                DiagnosticSeverity.Error).WithLocation(0);
-            await VerifyCS.VerifyAnalyzerAsync(test, expectedDetectorDiagnostic);
-        }
-
-
-        [TestMethod]
         public async Task D_DivideNumberBySimpleConstantExpression_DiagnosticIsTriggered()
         {
             var test = @"
@@ -209,9 +187,10 @@ using System;
             await VerifyCS.VerifyAnalyzerAsync(test, expectedDetectorDiagnostic, expectedStandartDiagnostic);
         }
 
+        //Diagnostic is triggered for x and not triggered for y;
 
         [TestMethod]
-        public async Task DA_DivideVariableBySimpleConstantExpression_DiagnosticIsTriggered()
+        public async Task D_DivideNumberByZeroVariable_Test1_DiagnosticIsTriggered()
         {
             var test = @"
 using System;
@@ -220,9 +199,9 @@ using System;
     {
         static void Main(string[] args)
         {
-            const int x = 2;
-            int y = 4;
-            {|#0:y /= (x - x)|};
+            int x = 0, y = 1;
+            x = {|#0:3 / x|};
+            y = 3 / y;
         }
     };
 ";
@@ -232,11 +211,8 @@ using System;
             await VerifyCS.VerifyAnalyzerAsync(test, expectedDetectorDiagnostic);
         }
 
-
-        //Diagnostic is not triggered when it is expected. Analyzer is still in development
-
         [TestMethod]
-        public async Task D_DivideNumberByZeroVariable_DiagnosticIsTriggered()
+        public async Task D_DivideNumberByZeroVariable_Test2_DiagnosticIsTriggered()
         {
             var test = @"
 using System;
@@ -245,33 +221,11 @@ using System;
     {
         static void Main(string[] args)
         {
-            int x = 0;
-            int y = {|#0:3 / x|};
-        }
-    };
-";
-
-            var expectedDetectorDiagnostic = new DiagnosticResult(DivisionByZeroDetectorAnalyzer.DiagnosticId,
-                DiagnosticSeverity.Error).WithLocation(0);
-            var expectedStandartDiagnostic = new DiagnosticResult(DiagnosticResult.CompilerError("CS0020").Id,
-                DiagnosticSeverity.Error).WithLocation(0);
-            await VerifyCS.VerifyAnalyzerAsync(test, expectedDetectorDiagnostic, expectedStandartDiagnostic);
-        }
-
-
-        [TestMethod]
-        public async Task DA_DivideVariableByZeroVariable_DiagnosticIsTriggered()
-        {
-            var test = @"
-using System;
-
-    class Program
-    {
-        static void Main(string[] args)
-        {
-            int x = 0;
-            int y = 4;
-            {|#0:y /= x|};
+            int x = 1, y = 0;
+            x = 0;
+            y = 1;
+            x = {|#0:3 / x|};
+            y = 3 / y;
         }
     };
 ";
@@ -280,5 +234,6 @@ using System;
                 DiagnosticSeverity.Error).WithLocation(0);
             await VerifyCS.VerifyAnalyzerAsync(test, expectedDetectorDiagnostic);
         }
+                
     }
 }
